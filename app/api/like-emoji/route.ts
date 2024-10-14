@@ -7,6 +7,11 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+interface ToggleLikeResponse {
+  new_likes_count: number;
+  liked: boolean;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { userId } = getAuth(request) || {};
@@ -37,14 +42,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
-    if (!data || typeof data.new_likes_count !== 'number' || typeof data.liked !== 'boolean') {
-      console.error('Unexpected response from toggle_emoji_like:', data);
+    const typedData = data as ToggleLikeResponse;
+
+    if (!typedData || typeof typedData.new_likes_count !== 'number' || typeof typedData.liked !== 'boolean') {
+      console.error('Unexpected response from toggle_emoji_like:', typedData);
       return NextResponse.json({ error: 'Unexpected response from server' }, { status: 500 })
     }
 
-    console.log('Successfully toggled like. New count:', data.new_likes_count, 'Liked:', data.liked);
+    console.log('Successfully toggled like. New count:', typedData.new_likes_count, 'Liked:', typedData.liked);
 
-    return NextResponse.json({ success: true, likesCount: data.new_likes_count, liked: data.liked })
+    return NextResponse.json({ success: true, likesCount: typedData.new_likes_count, liked: typedData.liked })
   } catch (error) {
     console.error('Unexpected error in like-emoji API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
